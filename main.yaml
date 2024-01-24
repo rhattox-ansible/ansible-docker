@@ -1,0 +1,88 @@
+---
+- name: Install Docker with Ansible
+  hosts: localhost
+  become: yes
+
+  tasks:
+    - name: Update APT package cache
+      apt:
+        update_cache: yes
+
+    - name: Install prerequisites for Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: get the username running the deploy
+      become: false
+      shell: "/bin/bash -c 'whoami'"
+      register: host_username
+
+    - name: Display Command Output
+      debug:
+        var: host_username.stdout
+
+    - name: Get System Architecture
+      shell: "/bin/bash -c 'dpkg --print-architecture'"
+      register: get_system_arch
+
+    - name: Display Command Output
+      debug:
+        var: get_system_arch.stdout
+
+    - name: Get Version Code Name
+      shell: "/bin/bash -c 'source /etc/os-release && echo $VERSION_CODENAME'"
+      register: get_version_codename
+
+    - name: Display Command Output
+      debug:
+        var: get_version_codename.stdout
+
+    - name: Install Docker GPG Key
+      block:
+        - name: Download Docker GPG Key
+          ansible.builtin.get_url:
+            url: https://download.docker.com/linux/debian/gpg
+            dest: /etc/apt/keyrings/docker.gpg
+
+        - name: Add Apt signing key on remote server to keyring
+          ansible.builtin.apt_key:
+            file: /etc/apt/keyrings/docker.gpg
+            state: present
+
+        - name: Add Docker to the APT Repository
+          ansible.builtin.apt_repository:
+            repo: "deb [arch={{ get_system_arch.stdout }}] https://download.docker.com/linux/debian  {{ get_version_codename.stdout }} stable"
+            state: present
+
+    - name: Update APT package cache
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Add the user to the docker group
+      user:
+        name: "{{ host_username.stdout }}"
+        groups: docker
+        append: yes
+      become: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
