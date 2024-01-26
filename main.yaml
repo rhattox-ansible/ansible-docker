@@ -82,7 +82,7 @@
             path: "{{ tmp_key_location }}"
             state: absent
 
-        - name: Attempt
+        - name: Install APT repository
           ansible.builtin.apt_repository:
             repo: "deb [arch=amd64 signed-by={{ key_location }}] https://download.docker.com/linux/debian {{ get_version_codename.stdout }} stable"
             state: present
