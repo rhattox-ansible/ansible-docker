@@ -1,15 +1,19 @@
 ---
-- name: Install Docker with Ansible
+- name: Install Docker
   hosts: localhost
-  become: yes
+  become: true
 
+  vars:
+    key_location: /usr/share/keyrings/docker.gpg
   tasks:
     - name: Update APT package cache
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: "yes"
+        cache_valid_time: 6000
 
     - name: Install prerequisites for Docker
-      apt:
+      ansible.builtin.apt:
         name:
           - apt-transport-https
           - ca-certificates
@@ -18,71 +22,89 @@
           - lsb-release
         state: present
 
-    - name: get the username running the deploy
-      become: false
-      shell: "/bin/bash -c 'whoami'"
-      register: host_username
+    - name: Retrieve system environment
+      block:
+        - name: Get the username running the deploy
+          become: false
+          register: host_username
+          changed_when: host_username.rc != 0
+          ansible.builtin.command: whoami
 
-    - name: Display Command Output
-      debug:
-        var: host_username.stdout
+        - name: Display Command Output
+          ansible.builtin.debug:
+            var: host_username.stdout
 
-    - name: Get System Architecture
-      shell: "/bin/bash -c 'dpkg --print-architecture'"
-      register: get_system_arch
+        - name: Get System Architecture
+          register: get_system_arch
+          changed_when: get_system_arch.rc != 0
+          ansible.builtin.command: dpkg --print-architecture
 
-    - name: Display Command Output
-      debug:
-        var: get_system_arch.stdout
+        - name: Display Command Output
+          ansible.builtin.debug:
+            var: get_system_arch.stdout
 
-    - name: Get Version Code Name
-      shell: "/bin/bash -c 'source /etc/os-release && echo $VERSION_CODENAME'"
-      register: get_version_codename
+        - name: Get Version Code Name
+          register: get_version_codename
+          changed_when: get_version_codename.rc != 0
+          ansible.builtin.shell: |
+            source /etc/os-release &&\
+            echo $VERSION_CODENAME
+          args:
+            executable: /bin/bash
 
-    - name: Display Command Output
-      debug:
-        var: get_version_codename.stdout
+        - name: Display Command Output
+          ansible.builtin.debug:
+            var: get_version_codename.stdout
 
     - name: Install Docker GPG Key
       block:
         - name: Download Docker GPG Key
           ansible.builtin.get_url:
             url: https://download.docker.com/linux/debian/gpg
-            dest: /etc/apt/keyrings/docker.gpg
+            dest: "{{ key_location }}"
+            mode: "0440"
 
         - name: Add Apt signing key on remote server to keyring
           ansible.builtin.apt_key:
-            file: /etc/apt/keyrings/docker.gpg
+            file: "{{ key_location }}"
             state: present
 
         - name: Add Docker to the APT Repository
           ansible.builtin.apt_repository:
-            repo: "deb [arch={{ get_system_arch.stdout }}] https://download.docker.com/linux/debian  {{ get_version_codename.stdout }} stable"
+            repo: >
+              deb [arch={{ get_system_arch.stdout }} signed-by={{ key_location }}]
+               https://download.docker.com/linux/debian  {{ get_version_codename.stdout }} stable
+            state: present
+            update_cache: true
+            filename: "docker.list"
+
+    - name: Install Docker package
+      block:
+        - name: Update APT package cache
+          ansible.builtin.apt:
+            update_cache: true
+
+        - name: Install Docker
+          ansible.builtin.apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
             state: present
 
-    - name: Update APT package cache
-      apt:
-        update_cache: yes
+    - name: Docker Post Install
+      block:
+        - name: Add the user to the docker group
+          ansible.builtin.user:
+            name: "{{ host_username.stdout }}"
+            groups: docker
+            append: true
+          become: true
 
-    - name: Install Docker
-      apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
-        state: present
-
-    - name: Add the user to the docker group
-      user:
-        name: "{{ host_username.stdout }}"
-        groups: docker
-        append: yes
-      become: yes
-
-    - name: Start Docker service
-      service:
-        name: docker
-        state: started
-        enabled: yes
+        - name: Start Docker service
+          ansible.builtin.service:
+            name: docker
+            state: started
+            enabled: true
