@@ -1,0 +1,7 @@
+tmp_key_location: /tmp/docker.gpg
+key_location: /usr/share/keyrings/docker.gpg
+docker_ce_version: 5:25.0.1-1~debian.12~bookworm
+docker_ce_cli_version: 5:25.0.1-1~debian.12~bookworm
+containerd_io_version: 1.6.27-1
+docker_buildx_plugin_version: 0.12.1-1~debian.12~bookworm
+docker_compose_plugin_version: 2.24.2-1~debian.12~bookworm
