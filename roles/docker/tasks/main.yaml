@@ -69,6 +69,13 @@
         append: true
       become: true
 
+    - name: add docker DNS
+      ansible.builtin.template:
+        src: "roles/docker/templates/daemon.json.j2"
+        dest: "/etc/docker/daemon.json"
+        owner: root
+        group: root
+        mode: "0777"
     # - name: Start Docker service
     #   ansible.builtin.service:
     #     name: docker
