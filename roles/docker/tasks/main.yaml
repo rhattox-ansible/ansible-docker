@@ -85,7 +85,11 @@
         group: root
         mode: "0640"
 
-    - name: Start Docker service
+    - name: Enable Service
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Start Service
       ansible.builtin.service:
         name: docker
         state: started
