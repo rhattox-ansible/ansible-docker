@@ -1,5 +1,7 @@
 tmp_key_location: /tmp/docker.gpg
+
 key_location: /usr/share/keyrings/docker.gpg
+
 docker_ce_version: 5:25.0.1-1~{{ ansible_facts.distribution | lower }}.{{ ansible_facts.distribution_version }}~{{ ansible_facts.distribution_release | lower }}
 docker_ce_cli_version: 5:25.0.1-1~{{ ansible_facts.distribution | lower }}.{{ ansible_facts.distribution_version }}~{{ ansible_facts.distribution_release | lower }}
 containerd_io_version: 1.6.27-1
