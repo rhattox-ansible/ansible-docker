@@ -1,0 +1,33 @@
+- name: Post Install
+  block:
+  - name: Add User To App Group
+    ansible.builtin.user:
+      name: "{{ ansible_env.SUDO_USER }}"
+      groups: "{{ app_name }}"
+      append: true
+
+  - name: Update App Service
+    ansible.builtin.template:
+      src: "roles/{{ app_name }}/templates/{{ app_name }}.service.j2"
+      dest: "/usr/lib/systemd/system/{{ app_name }}.service"
+      owner: root
+      group: root
+      mode: "0640"
+
+  - name: Update Extra Config
+    ansible.builtin.template:
+      src: "roles/{{ app_name }}/templates/daemon.json.j2"
+      dest: "/etc/{{ app_name }}/daemon.json"
+      owner: root
+      group: root
+      mode: "0640"
+
+  - name: Enable Service
+    ansible.builtin.systemd:
+      daemon_reload: true
+
+  - name: Start Service
+    ansible.builtin.service:
+      name: "{{ app_name }}"
+      state: started
+      enabled: true
