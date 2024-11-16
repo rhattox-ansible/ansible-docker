@@ -59,4 +59,4 @@
     ansible.builtin.apt_repository:
       repo: "{{ apt_url }}"
       state: present
-      filename: docker
+      filename: "{{ app_name }}"
