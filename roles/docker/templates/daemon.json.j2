@@ -1,4 +1,5 @@
 {
-  "dns": [ "{{ ansible_default_ipv4.gateway }}" ],
+  "mtu": 1450,
+  "dns": [ "{{ ansible_default_ipv4.gateway }}", "8.8.8.8", "8.8.4.4"  ],
   "hosts": ["unix:///var/run/docker.sock", "tcp://127.0.0.1:2375"]
 }
