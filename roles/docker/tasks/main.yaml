@@ -1,6 +1,3 @@
-- name: Pre Installation
-  ansible.builtin.include_tasks: pre_install.yaml
-
 - name: Core Installation
   ansible.builtin.include_tasks: core_install.yaml
 

@@ -1,22 +1,8 @@
-prerequisite_packages: |
-  - apt-transport-https
-  - ca-certificates
-  - curl
-  - gnupg
-  - lsb-release
-
 core_packages: |
   - docker-ce
   - docker-ce-cli
   - containerd.io
   - docker-buildx-plugin
   - docker-compose-plugin
-
-tmp_key_location: /tmp/docker.gpg
-key_location: /usr/share/keyrings/docker.gpg
-
-docker_url: "https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}"
-gpg_key_url: "{{ docker_url }}/gpg"
-apt_url: "deb [arch=amd64 signed-by={{ key_location }}] {{ docker_url }} {{ ansible_facts.distribution_release }} stable"
 
 app_name: docker
