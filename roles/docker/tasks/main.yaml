@@ -1,3 +1,8 @@
+- name: Install GPG Key and APT Repository
+  ansible.builtin.include_role:
+    name: rhattox.apt_repo_install.gpg
+    vars_from: main
+
 - name: Core Installation
   ansible.builtin.include_tasks: core_install.yaml
 
